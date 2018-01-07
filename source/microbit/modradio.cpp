@@ -284,7 +284,10 @@ static mp_obj_t radio_receive(uint8_t *header, mp_buffer_info_t *bufinfo, uint32
         }
     } else {
         if (len < 4) {
-            mp_raise_ValueError("received packet is not a string (header is too short)");
+            // The message is not long enough for the string header.
+            // So just pretend as if there are no messages waiting.
+            // (We eat the data later).
+            ret = mp_const_none;
         } else {
             memcpy(header, buf, 4);
             ret = mp_obj_new_str((char*)buf + 4, len - 3, false); // if it raises the radio irq remains disabled...
@@ -487,7 +490,7 @@ STATIC mp_obj_t mod_radio_receive(void) {
     mp_obj_t obj = radio_receive(header, NULL, NULL);
     // verify header has the correct values
     if (obj != mp_const_none && !(header[0] >= 3 && header[1] == 1 && header[2] == 0 && header[3] == 1)) {
-        mp_raise_ValueError("received packet is not a string (message header is invalid)");
+        obj = mp_const_none;
     }
     return obj;
 }
