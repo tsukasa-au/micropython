@@ -115,6 +115,9 @@ static MP_DEFINE_CONST_FUN_OBJ_1(task_queue_peek_obj, task_queue_peek);
 static mp_obj_t task_queue_push(size_t n_args, const mp_obj_t *args) {
     mp_obj_task_queue_t *self = MP_OBJ_TO_PTR(args[0]);
     mp_obj_task_t *task = MP_OBJ_TO_PTR(args[1]);
+    if (!mp_obj_is_type(task, &task_type)) {
+        mp_raise_TypeError(MP_ERROR_TEXT("object not a Task"));
+    }
     task->data = mp_const_none;
     if (n_args == 2) {
         task->ph_key = ticks();
