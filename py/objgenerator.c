@@ -34,6 +34,9 @@
 #include "py/objgenerator.h"
 #include "py/objfun.h"
 #include "py/cstack.h"
+#if MICROPY_PY_SYS_SETTRACE
+#include "py/profile.h"
+#endif
 
 // Instance of GeneratorExit exception - needed by generator.close()
 const mp_obj_exception_t mp_const_GeneratorExit_obj = {{&mp_type_GeneratorExit}, 0, 0, NULL, (mp_obj_tuple_t *)&mp_const_empty_tuple_obj};
@@ -352,6 +355,30 @@ static const mp_rom_map_elem_t gen_instance_locals_dict_table[] = {
     #endif
 };
 
+#if MICROPY_PY_SYS_SETTRACE
+static void gen_instance_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
+    mp_obj_gen_instance_t *self = MP_OBJ_TO_PTR(self_in);
+    if (dest[0] == MP_OBJ_NULL) {
+        // Load
+        if (attr == MP_QSTR_cr_frame) {
+            dest[0] = MP_OBJ_FROM_PTR(self->code_state.frame);
+            return;
+        } else if (attr == MP_QSTR_cr_code) {
+            dest[0] = MP_OBJ_FROM_PTR(self->code_state.frame->code);
+            return;
+        }
+    } else {
+        // Delete/Store
+        if (attr == MP_QSTR_cr_frame || attr == MP_QSTR_cr_code) {
+            // Do not allow these attributes to be modified.
+            return;
+        }
+    }
+    // Need to forward to locals dict.
+    dest[1] = MP_OBJ_SENTINEL;
+}
+#endif
+
 static MP_DEFINE_CONST_DICT(gen_instance_locals_dict, gen_instance_locals_dict_table);
 
 MP_DEFINE_CONST_OBJ_TYPE(
@@ -360,5 +387,8 @@ MP_DEFINE_CONST_OBJ_TYPE(
     MP_TYPE_FLAG_ITER_IS_ITERNEXT,
     print, gen_instance_print,
     iter, gen_instance_iternext,
+    #if MICROPY_PY_SYS_SETTRACE
+    attr, &gen_instance_attr,
+    #endif
     locals_dict, &gen_instance_locals_dict
     );

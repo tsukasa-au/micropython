@@ -1216,6 +1216,7 @@ yield:
                     return MP_VM_RETURN_YIELD;
 
                 ENTRY(MP_BC_YIELD_FROM): {
+                    FRAME_UPDATE();
                     MARK_EXC_IP_SELECTIVE();
                     mp_vm_return_kind_t ret_kind;
                     mp_obj_t send_value = POP();
