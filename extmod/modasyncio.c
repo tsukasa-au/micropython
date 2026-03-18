@@ -154,6 +154,38 @@ static mp_obj_t task_queue_remove(mp_obj_t self_in, mp_obj_t task_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(task_queue_remove_obj, task_queue_remove);
 
+typedef struct _mp_obj_task_queue_it_t {
+    mp_obj_base_t base;
+    mp_obj_task_t *task;
+} mp_obj_task_queue_it_t;
+
+static mp_obj_t task_queue_it_iternext(mp_obj_t self_in) {
+    mp_obj_task_queue_it_t *self = MP_OBJ_TO_PTR(self_in);
+    if (self->task == NULL) {
+        return MP_OBJ_STOP_ITERATION;
+    }
+    mp_obj_task_t *ret = self->task;
+    self->task = (mp_obj_task_t *)mp_pairheap_next(&self->task->pairheap);
+    return ret;
+}
+
+static MP_DEFINE_CONST_OBJ_TYPE(
+    mp_type_task_queue_it,
+    MP_QSTR_iterator,
+    MP_TYPE_FLAG_ITER_IS_ITERNEXT,
+    iter, task_queue_it_iternext
+    );
+
+static mp_obj_t task_queue_iterator_new(mp_obj_t task_queue_in, mp_obj_iter_buf_t *iter_buf) {
+    // assert(sizeof(mp_obj_array_t) <= sizeof(mp_obj_iter_buf_t));
+    mp_obj_task_queue_t *task_queue = MP_OBJ_TO_PTR(task_queue_in);
+    mp_obj_task_queue_it_t *o = (mp_obj_task_queue_it_t *)iter_buf;
+    o->base.type = &mp_type_task_queue_it;
+    o->task = task_queue->heap;
+    return MP_OBJ_FROM_PTR(o);
+}
+
+
 static const mp_rom_map_elem_t task_queue_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_peek), MP_ROM_PTR(&task_queue_peek_obj) },
     { MP_ROM_QSTR(MP_QSTR_push), MP_ROM_PTR(&task_queue_push_obj) },
@@ -165,8 +197,9 @@ static MP_DEFINE_CONST_DICT(task_queue_locals_dict, task_queue_locals_dict_table
 static MP_DEFINE_CONST_OBJ_TYPE(
     task_queue_type,
     MP_QSTR_TaskQueue,
-    MP_TYPE_FLAG_NONE,
+    MP_TYPE_FLAG_ITER_IS_GETITER,
     make_new, task_queue_make_new,
+    iter, task_queue_iterator_new,
     locals_dict, &task_queue_locals_dict
     );
 

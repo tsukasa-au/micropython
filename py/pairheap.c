@@ -145,3 +145,15 @@ mp_pairheap_t *mp_pairheap_delete(mp_pairheap_lt_t lt, mp_pairheap_t *heap, mp_p
     }
     return heap;
 }
+
+mp_pairheap_t *mp_pairheap_next(mp_pairheap_t *node) {
+    assert(node != NULL);
+    if (node->child) {
+        return node->child;
+    } else {
+        while (NEXT_IS_RIGHTMOST_PARENT(node->next)) {
+            node = NEXT_GET_RIGHTMOST_PARENT(node->next);
+        }
+        return node->next;
+    }
+}

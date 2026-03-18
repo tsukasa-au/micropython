@@ -57,6 +57,7 @@ typedef int (*mp_pairheap_lt_t)(mp_pairheap_t *, mp_pairheap_t *);
 mp_pairheap_t *mp_pairheap_meld(mp_pairheap_lt_t lt, mp_pairheap_t *heap1, mp_pairheap_t *heap2);
 mp_pairheap_t *mp_pairheap_pairing(mp_pairheap_lt_t lt, mp_pairheap_t *child);
 mp_pairheap_t *mp_pairheap_delete(mp_pairheap_lt_t lt, mp_pairheap_t *heap, mp_pairheap_t *node);
+mp_pairheap_t *mp_pairheap_next(mp_pairheap_t *node);
 
 // Create a new heap.
 static inline mp_pairheap_t *mp_pairheap_new(mp_pairheap_lt_t lt) {
